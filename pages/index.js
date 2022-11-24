@@ -62,7 +62,7 @@ export default function Home() {
       channel.unbind_all()
       channel.unsubscribe()
     }
-  }, [])
+  }, [onPusherEvent])
 
   return (
     <div className={styles.container}>
