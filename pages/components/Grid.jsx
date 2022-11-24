@@ -30,6 +30,7 @@ export default function Grid({
       }
     })
     setGrid(newGrid)
+    pusher.current.disconnect();
   }, [grid])
 
   useEffect(() => {
