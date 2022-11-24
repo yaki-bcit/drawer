@@ -1,8 +1,66 @@
 import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
+import dynamic from 'next/dynamic'
+
+const Grid = dynamic(() => import('./components/Grid'), {
+  ssr: false,
+})
+
+import { useState, useEffect } from 'react'
+import Pusher from "pusher-js"
+import axios from "axios"
 
 export default function Home() {
+  const cells = []
+    for (let x = 0; x < 20; x++) {
+      for (let y = 0; y < 20; y++) {
+        cells.push({
+          id: `${x}-${y}`,
+          //x: x,
+          //y: y,
+          value: "FFFFFF",
+        })
+      }
+    }
+  //const [grid, setGrid] = useLocalStorage('grid', cells)
+  const [grid, setGrid] = useState(cells)
+
+  async function handleClick(cell) {
+    await axios.post("/api/cell", {
+      cell,
+    })
+  }
+
+  function onPusherEvent(data) {
+    console.log('grid after click', grid.slice(0, 5))
+      const newGrid = grid.map((cell) => {
+        if (cell.id === data.cell.id) {
+          return { ...cell, value: data.cell.value }
+        } else {
+          return { ...cell }
+        }
+      })
+      console.log('newGrid', newGrid.slice(0, 5))
+      setGrid(newGrid)
+  }
+
+  useEffect(() => {
+    const pusher = new Pusher('2daa1e104f95a54fd72e', {
+      cluster: 'us3',
+      encrypted: true
+    })
+    const channel = pusher.subscribe('drawer-channel')
+    channel.bind("drawer-event", async (data) => {
+      onPusherEvent(data)
+    })
+
+    return () => {
+      channel.unbind_all()
+      channel.unsubscribe()
+    }
+  }, [])
+
   return (
     <div className={styles.container}>
       <Head>
@@ -13,57 +71,52 @@ export default function Home() {
 
       <main className={styles.main}>
         <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
+          Drawer: <br /> Draw Whatever <br />🖌
         </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
+        <Grid grid={grid} handleClick={handleClick} />
       </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer>
     </div>
   )
+}
+
+function useLocalStorage(key, initialValue) {
+  // State to store our value
+  // Pass initial state function to useState so logic is only executed once
+  const [storedValue, setStoredValue] = useState(() => {
+    if (typeof window === "undefined") {
+      return initialValue;
+    }
+
+    try {
+      // Get from local storage by key
+      const item = window.localStorage.getItem(key);
+      // Parse stored json or if none return initialValue
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      // If error also return initialValue
+      console.log(error);
+      return initialValue;
+    }
+  });
+
+  // Return a wrapped version of useState's setter function that ...
+  // ... persists the new value to localStorage.
+  const setValue = (value) => {
+    try {
+      // Allow value to be a function so we have same API as useState
+      const valueToStore =
+        value instanceof Function ? value(storedValue) : value;
+      // Save state
+      setStoredValue(valueToStore);
+      // Save to local storage
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      }
+    } catch (error) {
+      // A more advanced implementation would handle the error case
+      console.log(error);
+    }
+  };
+
+  return [storedValue, setValue];
 }
