@@ -5,7 +5,6 @@ export default function Grid({
   handleClick
 }) {
   if (grid) {
-    console.log("grid", grid.slice(0, 5))
   }
   
   return (

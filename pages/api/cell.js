@@ -14,7 +14,6 @@ export default async function handler(req, res) {
     case 'POST':
       try {
         const { cell } = req.body
-        console.log('post cell', cell)
 
         cell.value = cell.value === "FFFFFF" ? "000000" : "FFFFFF"
         
