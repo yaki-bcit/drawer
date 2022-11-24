@@ -46,7 +46,7 @@ export default function Home() {
   }
 
   useEffect(() => {
-    const pusher = new Pusher('2daa1e104f95a54fd72e', {
+    const pusher = new Pusher('11556dc9c381feb5b9f7', {
       cluster: 'us3',
       encrypted: true
     })
