@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
         cell.value = cell.value === "FFFFFF" ? "000000" : "FFFFFF"
         
-        pusher.trigger("drawer-channel", "drawer-event", {
+        await pusher.trigger("drawer-channel", "drawer-event", {
           cell
         })
         res.json({ cell })
