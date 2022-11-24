@@ -7,60 +7,15 @@ const Grid = dynamic(() => import('./components/Grid'), {
   ssr: false,
 })
 
-import { useState, useEffect, useRef } from 'react'
-import Pusher from "pusher-js"
 import axios from "axios"
 
 export default function Home() {
-  let pusher = useRef(null)
-  
-
-  const cells = []
-    for (let x = 0; x < 20; x++) {
-      for (let y = 0; y < 20; y++) {
-        cells.push({
-          id: `${x}-${y}`,
-          //x: x,
-          //y: y,
-          value: "FFFFFF",
-        })
-      }
-    }
-  //const [grid, setGrid] = useLocalStorage('grid', cells)
-  const [grid, setGrid] = useState(cells)
 
   async function handleClick(cell) {
     await axios.post("/api/cell", {
       cell,
     })
   }
-
-  function onPusherEvent(data) {
-    const newGrid = grid.map((cell) => {
-      if (cell.id === data.cell.id) {
-        return { ...cell, value: data.cell.value }
-      } else {
-        return { ...cell }
-      }
-    })
-    setGrid(newGrid)
-  }
-
-  useEffect(() => {
-    pusher = new Pusher('11556dc9c381feb5b9f7', {
-      cluster: 'us3',
-      encrypted: true
-    })
-    const channel = pusher.subscribe('drawer-channel')
-    channel.bind("drawer-event", async (data) => {
-      onPusherEvent(data)
-    })
-
-    return () => {
-      channel.unbind_all()
-      channel.unsubscribe()
-    }
-  }, [onPusherEvent])
 
   return (
     <div className={styles.container}>
@@ -74,7 +29,7 @@ export default function Home() {
         <h1 className={styles.title}>
           Drawer: <br /> Draw Whatever <br />🖌
         </h1>
-        <Grid grid={grid} handleClick={handleClick} />
+        <Grid handleClick={handleClick} />
       </main>
     </div>
   )
