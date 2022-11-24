@@ -7,15 +7,13 @@ const Grid = dynamic(() => import('./components/Grid'), {
   ssr: false,
 })
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Pusher from "pusher-js"
 import axios from "axios"
 
 export default function Home() {
-  const pusher = new Pusher('11556dc9c381feb5b9f7', {
-    cluster: 'us3',
-    encrypted: true
-  })
+  let pusher = useRef(null)
+  
 
   const cells = []
     for (let x = 0; x < 20; x++) {
@@ -51,7 +49,10 @@ export default function Home() {
   }
 
   useEffect(() => {
-    
+    pusher = new Pusher('11556dc9c381feb5b9f7', {
+      cluster: 'us3',
+      encrypted: true
+    })
     const channel = pusher.subscribe('drawer-channel')
     channel.bind("drawer-event", async (data) => {
       onPusherEvent(data)
