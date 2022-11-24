@@ -12,6 +12,11 @@ import Pusher from "pusher-js"
 import axios from "axios"
 
 export default function Home() {
+  const pusher = new Pusher('11556dc9c381feb5b9f7', {
+    cluster: 'us3',
+    encrypted: true
+  })
+
   const cells = []
     for (let x = 0; x < 20; x++) {
       for (let y = 0; y < 20; y++) {
@@ -46,10 +51,7 @@ export default function Home() {
   }
 
   useEffect(() => {
-    const pusher = new Pusher('11556dc9c381feb5b9f7', {
-      cluster: 'us3',
-      encrypted: true
-    })
+    
     const channel = pusher.subscribe('drawer-channel')
     channel.bind("drawer-event", async (data) => {
       onPusherEvent(data)
